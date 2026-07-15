@@ -1,125 +1,91 @@
-import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
-import { Text, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Animated, Easing, Text, View } from 'react-native';
 
+import { Pose, PoseSkeleton } from './PoseSkeleton';
+import { useReducedMotion } from './useReducedMotion';
 
-function WorkoutCard({
-  title,
-  sessions,
-  duration,
-  level,
-  rotate,
-  top,
-  left,
-  right,
-  accent,
-}: {
-  title: string;
-  sessions: string;
-  duration: string;
-  level: string;
-  rotate: string;
-  top?: number;
-  left?: number;
-  right?: number;
-  accent?: boolean;
-}) {
-  return (
-    <View
-      style={{
-        position: 'absolute',
-        top,
-        left,
-        right,
-        width: 170,
-        backgroundColor: '#FFFFFF',
-        borderRadius: 14,
-        padding: 12,
-        borderWidth: 1.5,
-        borderColor: accent ? '#1B4D3E' : '#E5E7EB',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.07,
-        shadowRadius: 12,
-        elevation: 4,
-        transform: [{ rotate }],
-      }}>
-   
-      <View
-        style={{
-          height: 70,
-          backgroundColor: '#F3F4F6',
-          borderRadius: 8,
-          marginBottom: 8,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-        <Ionicons name="fitness-outline" size={28} color="#1B4D3E" />
-      </View>
-      <Text style={{ fontSize: 13, fontWeight: '700', color: '#111827', marginBottom: 6 }}>
-        {title}
-      </Text>
-      <View style={{ gap: 3 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-          <Ionicons name="layers-outline" size={11} color="#6B7280" />
-          <Text style={{ fontSize: 11, color: '#6B7280' }}>{sessions} Sessions</Text>
-          <Ionicons name="time-outline" size={11} color="#6B7280" style={{ marginLeft: 4 }} />
-          <Text style={{ fontSize: 11, color: '#6B7280' }}>{duration}</Text>
-        </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-          <Ionicons name="star-outline" size={11} color="#6B7280" />
-          <Text style={{ fontSize: 11, color: '#6B7280' }}>{level}</Text>
-        </View>
-      </View>
-    </View>
-  );
-}
+const BG = '#0A0E0F';
+const ACCENT = '#39FF88';
+const TEXT = '#E8ECEC';
+const TEXT_MUTED = '#8A9694';
+
+const SERVE_POSE: Pose = {
+  head: { x: 0.56, y: 0.08 },
+  neck: { x: 0.54, y: 0.16 },
+  lShoulder: { x: 0.44, y: 0.18 },
+  rShoulder: { x: 0.62, y: 0.17 },
+  lElbow: { x: 0.34, y: 0.28 },
+  rElbow: { x: 0.72, y: 0.08 },
+  lHand: { x: 0.28, y: 0.4 },
+  rHand: { x: 0.78, y: -0.02 },
+  hip: { x: 0.5, y: 0.42 },
+  lKnee: { x: 0.42, y: 0.62 },
+  rKnee: { x: 0.58, y: 0.6 },
+  lFoot: { x: 0.4, y: 0.84 },
+  rFoot: { x: 0.62, y: 0.8 },
+};
 
 export default function Slide1() {
+  const angle = useRef(new Animated.Value(0)).current;
+  const [angleLabel, setAngleLabel] = React.useState('162°');
+  const reducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    const id = angle.addListener(({ value }) => {
+      setAngleLabel(`${Math.round(162 + value * 16)}°`);
+    });
+    if (reducedMotion) {
+      setAngleLabel('170°');
+      return () => angle.removeListener(id);
+    }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(angle, { toValue: 1, duration: 1400, easing: Easing.inOut(Easing.ease), useNativeDriver: false }),
+        Animated.timing(angle, { toValue: 0, duration: 1400, easing: Easing.inOut(Easing.ease), useNativeDriver: false }),
+      ])
+    );
+    loop.start();
+    return () => {
+      loop.stop();
+      angle.removeListener(id);
+    };
+  }, [angle, reducedMotion]);
+
   return (
-    <View style={{ flex: 1, backgroundColor: '#FFFFFF', paddingTop: 60 }}>
-   
-      <View style={{ paddingHorizontal: 28, marginBottom: 32 }}>
-        <Text style={{ fontSize: 32, fontWeight: '800', color: '#111827', lineHeight: 40 }}>
-          AI-powered training,{'\n'}
-          <Text style={{ color: '#1B4D3E' }}>built for you.</Text>
+    <View style={{ flex: 1, backgroundColor: BG, paddingTop: 76 }}>
+      <View style={{ paddingHorizontal: 28, marginBottom: 8 }}>
+        <Text style={{ color: ACCENT, fontSize: 12, fontWeight: '700', letterSpacing: 2, marginBottom: 12 }}>
+          COMPUTER VISION
         </Text>
-        <Text style={{ fontSize: 15, color: '#6B7280', marginTop: 10, lineHeight: 22 }}>
-          Real-time posture analysis across tennis, basketball, swimming and gym.
+        <Text style={{ fontSize: 32, fontWeight: '800', color: TEXT, lineHeight: 40 }}>
+          Your camera{'\n'}reads form{'\n'}
+          <Text style={{ color: ACCENT }}>like a coach.</Text>
+        </Text>
+        <Text style={{ fontSize: 15, color: TEXT_MUTED, marginTop: 12, lineHeight: 22 }}>
+          Real-time posture tracking across tennis, basketball, swimming and gym.
         </Text>
       </View>
 
-      
-      
-      <View style={{ flex: 1, position: 'relative' }}>
-        <WorkoutCard
-          title="Serve Mechanics"
-          sessions="24"
-          duration="20 min/day"
-          level="Beginner"
-          rotate="-6deg"
-          top={10}
-          left={20}
-        />
-        <WorkoutCard
-          title="Squat Form"
-          sessions="30"
-          duration="15 min/day"
-          level="Intermediate"
-          rotate="5deg"
-          top={20}
-          right={16}
-        />
-        <WorkoutCard
-          title="Free Throw Posture"
-          sessions="48"
-          duration="20 min/day"
-          level="Beginner"
-          rotate="-2deg"
-          top={130}
-          left={60}
-          accent
-        />
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <PoseSkeleton pose={SERVE_POSE} size={260} highlightJoints={['rHand', 'rElbow', 'hip']} />
+        <View
+          style={{
+            marginTop: 4,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 8,
+            backgroundColor: '#141A1B',
+            borderRadius: 10,
+            paddingHorizontal: 14,
+            paddingVertical: 8,
+            borderWidth: 1,
+            borderColor: 'rgba(57,255,136,0.2)',
+          }}>
+          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: ACCENT }} />
+          <Text style={{ color: ACCENT, fontSize: 12, fontFamily: 'monospace', letterSpacing: 0.5 }}>
+            ARM EXTENSION · {angleLabel}
+          </Text>
+        </View>
       </View>
     </View>
   );
